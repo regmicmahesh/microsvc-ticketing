@@ -1,11 +1,21 @@
 import mongoose from "mongoose";
+import { Password } from "../services/password";
 
-interface User{
-    email: string;
-    password: string;
+interface IUser {
+  email: string;
+  password: string;
 }
 
-const userSchema = new mongoose.Schema<User>({
+interface IUserDoc extends mongoose.Document {
+  email: string;
+  password: string;
+}
+
+interface IUserModel extends mongoose.Model<IUserDoc> {
+  build(attrs: IUser): IUserDoc;
+}
+
+const userSchema = new mongoose.Schema<IUserDoc>({
   email: {
     type: String,
     required: true,
@@ -20,7 +30,18 @@ const userSchema = new mongoose.Schema<User>({
   },
 });
 
-export const User = mongoose.model("User", userSchema);
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) {
+    return next();
+  }
 
-new User({email: "", password: 12})
+  const hashedPassword = await Password.toHash(this.password);
+  this.password = hashedPassword;
+  return next();
+});
 
+userSchema.statics.build = (attrs: IUser) => {
+  return new User(attrs);
+};
+
+export const User = mongoose.model<IUserDoc, IUserModel>("User", userSchema);

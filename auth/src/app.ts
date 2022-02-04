@@ -24,12 +24,15 @@ app.use(errorHandler);
 
 const start = async () => {
   try {
-    await connect("mongodb://auth-mongo-svc:27017");
+    await connect("mongodb://auth-mongo-svc:27017/auth");
+    app.listen(3000, () => {
+
+      console.log("🚀 Listening on port 3000");
+    });
   } catch (err) {
     console.log(err);
   }
 };
 
-app.listen(3000, () => {
-  console.log("🚀 Server ready at http://localhost:3000 🚀");
-});
+start();
+
